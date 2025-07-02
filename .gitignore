@@ -1,0 +1,13 @@
+---
+
+#### 2. ✅ **`.gitignore`**
+
+Create a new file in the root called `.gitignore`, and paste this:
+
+```gitignore
+build/
+*.o
+*.elf
+*.bin
+.DS_Store
+*.swp

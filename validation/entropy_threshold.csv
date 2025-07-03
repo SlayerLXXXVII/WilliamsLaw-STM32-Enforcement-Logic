@@ -1,0 +1,5 @@
+Time_ps,MicrostateCount,EntropyRate_J_per_K_s
+0,10000,2.0e-22
+10,20000,4.1e-22
+...
+1000,1900000,1.996e-10

@@ -1,13 +1,13 @@
----
-
-#### 2. ✅ **`.gitignore`**
-
-Create a new file in the root called `.gitignore`, and paste this:
-
-```gitignore
+# Build artifacts
 build/
 *.o
 *.elf
 *.bin
-.DS_Store
+*.hex
+
+# IDE files
+.vscode/
 *.swp
+
+# macOS
+.DS_Store

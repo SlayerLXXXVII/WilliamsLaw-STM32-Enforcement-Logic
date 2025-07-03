@@ -1,11 +1,9 @@
 #include "lambda_control.h"
+#include <math.h>
 
-// Default enforcement: linear decay
-void lambda_enforcement_strategy_default(LambdaPacket *pkt) {
-    if (pkt->phi >= pkt->phi_crit) {
-        pkt->lambda = 0.0f; // collapse enforcement
-    } else {
-        // linear interpolation
-        pkt->lambda = (pkt->phi_crit - pkt->phi) / pkt->phi_crit;
-    }
+void compute_lambda(LambdaPacket *pkt) {
+    float ratio = pkt->phi / PHI_THRESHOLD;
+    float decay = 1.0f - powf(ratio, EXPONENT_N);
+    if (decay < 0.0f) decay = 0.0f;
+    pkt->lambda = LAMBDA_0 * decay + FEEDBACK_K * pkt->psi;
 }

@@ -1,19 +1,26 @@
-#include "lambda_control.h"
+#include "utils.h"
 #include <stdio.h>
+#include <math.h>
 
-// Placeholder functions for sensor I/O and control
-void read_sensors(LambdaPacket *pkt) {
-    // Replace with actual ADC code
-    pkt->phi = 0.5f; // Simulated sensor read
-    pkt->psi = 1.0f; // Simulated sensor read
+// Clamp a float between min and max
+float clampf(float value, float min, float max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
 }
 
-void apply_control(float lambda) {
-    // Replace with actual GPIO/PWM output
-    printf("Applying control: λ = %.2f\n", lambda);
+// Map float from one range to another
+float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-void log_packet(LambdaPacket *pkt) {
-    // Replace with UART/SD logging
-    printf("Φ = %.2f | ψ = %.2f | λ = %.2f\n", pkt->phi, pkt->psi, pkt->lambda);
+// Placeholder delay function (should use timer peripheral)
+void delay_us(uint32_t microseconds) {
+    volatile uint32_t count = microseconds * 10;
+    while (count--) __asm__("nop");
+}
+
+// Optional UART logger (can be redirected or stubbed)
+void log_status(float phi, float psi, float lambda) {
+    printf("[LOG] Φ: %.3f  ψ: %.3f  λ: %.3f\n", phi, psi, lambda);
 }

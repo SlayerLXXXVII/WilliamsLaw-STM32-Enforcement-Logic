@@ -1,18 +1,16 @@
 #ifndef LAMBDA_CONTROL_H
 #define LAMBDA_CONTROL_H
 
-#define LAMBDA_PROTOCOL_VERSION 1.0f
-#define PHI_CRIT_VALUE 1.0f  // Default critical symmetry debt
+#include "config.h"
 
-// Data packet passed to enforcement logic
+// Packet for control computation
 typedef struct {
-    float phi;        // Symmetry debt value
-    float phi_crit;   // Collapse threshold
-    float psi;        // Coherence field level
-    float lambda;     // Enforcement strength
+    float phi;       // current impulse debt
+    float psi;       // current coherence field
+    float lambda;    // computed rigidity
 } LambdaPacket;
 
-// Enforcement strategies
-void lambda_enforcement_strategy_default(LambdaPacket *pkt);
+// Compute lambda based on current phi and psi
+void compute_lambda(LambdaPacket *pkt);
 
 #endif // LAMBDA_CONTROL_H

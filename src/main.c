@@ -1,35 +1,52 @@
-#include <stdio.h>
-#include "lambda_control.h"
-#include "sensor_interface.h"
+#include "main.h"
 #include "utils.h"
+#include "sensors.h"
+#include "control.h"
+#include "stm32f7xx_hal.h"
+
+#define LOOP_INTERVAL_US 100  // 10 kHz loop rate
+#define LOG_INTERVAL_MS 100   // Log every 100 ms
+
+UART_HandleTypeDef huart2;
+TIM_HandleTypeDef htim2;
+
+uint32_t last_log_time = 0;
+float phi = 0.0f, psi = 0.0f, lambda = 0.0f;
+float phi_dot = 0.0f;
 
 int main(void) {
-    // Initialization
-    float phi = 0.0f;    // Symmetry debt (Φ)
-    float psi = 0.0f;    // Coherence velocity (ψ)
-    float lambda = 0.0f; // Enforcement tensor (λ)
+    HAL_Init();
+    SystemClock_Config();
+    MX_GPIO_Init();
+    MX_USART2_UART_Init(&huart2);
+    MX_TIM2_Init(&htim2);
 
-    PhiPsiPacket pkt;
-
-    // System startup log
-    printf("=== Harmony Cell v2 Booted ===\n");
+    HAL_TIM_Base_Start(&htim2);
+    uint32_t last_loop = HAL_GetTick();
 
     while (1) {
-        // 1. Read sensor values (stubbed for now)
-        pkt = read_phi_psi();
+        uint32_t now = HAL_GetTick();
+        if ((now - last_loop) >= LOOP_INTERVAL_US / 1000) {
+            last_loop = now;
 
-        // 2. Calculate λ using enforcement law
-        lambda = calculate_lambda(pkt.phi, pkt.psi);
+            // --- Sensor Sampling ---
+            phi = read_phi_sensor();
+            psi = read_psi_sensor();
+            phi_dot = update_phi_rate(phi);
 
-        // 3. Apply λ to actuators (currently stubbed)
-        set_psi(lambda);  // This would trigger piezo control IRL
+            // --- λ Enforcement ---
+            lambda = compute_lambda(phi, psi);
 
-        // 4. Optional logging
-        log_status(pkt.phi, pkt.psi, lambda);
+            // --- Collapse Check ---
+            if (check_collapse(phi, phi_dot)) {
+                trigger_collapse_event(lambda);
+            }
 
-        // 5. Delay loop — simulate 10 kHz control loop
-        delay_us(100);  // 100 µs = 10 kHz loop
+            // --- Logging (every 100ms) ---
+            if ((now - last_log_time) >= LOG_INTERVAL_MS) {
+                log_state(&huart2, phi, psi, phi_dot, lambda);
+                last_log_time = now;
+            }
+        }
     }
-
-    return 0;
 }

@@ -1,13 +1,9 @@
-# Build artifacts
-build/
-*.o
-*.elf
+/Debug/
+/build/
+/*.elf
+*.launch
+*.log
 *.bin
 *.hex
-
-# IDE files
-.vscode/
-*.swp
-
-# macOS
-.DS_Store
+*.pyc
+*.o

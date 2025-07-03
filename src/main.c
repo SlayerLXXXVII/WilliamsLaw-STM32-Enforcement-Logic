@@ -1,25 +1,31 @@
+#include <stdio.h>
+#include "config.h"
+#include "sensor_interface.h"
 #include "lambda_control.h"
-#include "utils.h"   // ADC, timing, UART helpers
+#include "actuator_driver.h"
 
 int main(void) {
-    SystemInit();  // Platform-specific init if needed
+    // HAL and hardware init
+    sensor_init();
+    actuator_init();
 
-    LambdaPacket pkt = {0};
+    LambdaPacket pkt;
+    pkt.psi = 0.0f;
 
     while (1) {
-        // Sample sensors into pkt
-        read_sensors(&pkt);
-        pkt.phi_crit = PHI_CRIT_VALUE;
+        // 1. Sample Phi
+        pkt.phi = read_phi();
 
-        // Enforce collapse logic
-        lambda_enforcement_strategy_default(&pkt);
+        // 2. Compute lambda
+        compute_lambda(&pkt);
 
-        // Actuate system
-        apply_control(pkt.lambda);
+        // 3. Update psi based on control (e.g., inject coherence)
+        pkt.psi = /* derive new psi from lambda or other logic */ 0.0f;
 
-        // Log results
-        log_packet(&pkt);
+        set_psi(pkt.psi);
+
+        // 4. (Optional) Log via UART
+        // printf("Phi: %.2f, Psi: %.2f, Lambda: %.2f\n", pkt.phi, pkt.psi, pkt.lambda);
     }
-
     return 0;
 }

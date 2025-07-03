@@ -1,31 +1,35 @@
 #include <stdio.h>
-#include "config.h"
-#include "sensor_interface.h"
 #include "lambda_control.h"
-#include "actuator_driver.h"
+#include "sensor_interface.h"
+#include "utils.h"
 
 int main(void) {
-    // HAL and hardware init
-    sensor_init();
-    actuator_init();
+    // Initialization
+    float phi = 0.0f;    // Symmetry debt (Φ)
+    float psi = 0.0f;    // Coherence velocity (ψ)
+    float lambda = 0.0f; // Enforcement tensor (λ)
 
-    LambdaPacket pkt;
-    pkt.psi = 0.0f;
+    PhiPsiPacket pkt;
+
+    // System startup log
+    printf("=== Harmony Cell v2 Booted ===\n");
 
     while (1) {
-        // 1. Sample Phi
-        pkt.phi = read_phi();
+        // 1. Read sensor values (stubbed for now)
+        pkt = read_phi_psi();
 
-        // 2. Compute lambda
-        compute_lambda(&pkt);
+        // 2. Calculate λ using enforcement law
+        lambda = calculate_lambda(pkt.phi, pkt.psi);
 
-        // 3. Update psi based on control (e.g., inject coherence)
-        pkt.psi = /* derive new psi from lambda or other logic */ 0.0f;
+        // 3. Apply λ to actuators (currently stubbed)
+        set_psi(lambda);  // This would trigger piezo control IRL
 
-        set_psi(pkt.psi);
+        // 4. Optional logging
+        log_status(pkt.phi, pkt.psi, lambda);
 
-        // 4. (Optional) Log via UART
-        // printf("Phi: %.2f, Psi: %.2f, Lambda: %.2f\n", pkt.phi, pkt.psi, pkt.lambda);
+        // 5. Delay loop — simulate 10 kHz control loop
+        delay_us(100);  // 100 µs = 10 kHz loop
     }
+
     return 0;
 }

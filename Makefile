@@ -1,54 +1,41 @@
+# Makefile for STM32F746ZG - Harmony Cell Project
 
-######################################################################
-# Makefile for Harmony Cell - STM32F746ZG (No CubeMX)
-######################################################################
-
-# Target configuration
 TARGET = harmony_cell
-MCU = STM32F746ZG
-CPU = -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard
-FAMILY = STM32F7xx
+CPU = cortex-m7
+FAMILY = STM32F7
+DEVICE = STM32F746xx
 
-# Paths
-CORE = Core
-DRIVERS = Drivers
-CMSIS_INC = $(DRIVERS)/CMSIS/Include
-DEVICE = $(DRIVERS)/CMSIS/Device/ST/STM32F7xx
-INCLUDES = -I$(CORE)/Inc -I$(CMSIS_INC) -I$(DEVICE)
-
-# Source files
-SRCS = $(CORE)/Src/main.c $(CORE)/Src/harmony.c $(CORE)/Src/utils.c $(DEVICE)/system_stm32f7xx.c
-OBJS = $(SRCS:.c=.o)
-
-# Compiler tools
+# Toolchain
 CC = arm-none-eabi-gcc
-LD = arm-none-eabi-ld
 AS = arm-none-eabi-as
+LD = arm-none-eabi-ld
 OBJCOPY = arm-none-eabi-objcopy
-OBJDUMP = arm-none-eabi-objdump
 SIZE = arm-none-eabi-size
 
-# Compiler flags
-CFLAGS = $(CPU) -Wall -O2 -ffunction-sections -fdata-sections $(INCLUDES)
-LDFLAGS = -Tlinker.ld -Wl,--gc-sections
+# Flags
+CFLAGS = -mcpu=$(CPU) -mthumb -Wall -O2 -std=gnu11
+CFLAGS += -D$(DEVICE) -DUSE_HAL_DRIVER
+LDFLAGS = -Tldscripts/STM32F746ZGTx.ld -nostartfiles
+ASFLAGS = -mcpu=$(CPU) -mthumb
+OBJS = src/startup_stm32f746xx.o \
+       src/system_stm32f7xx.o \
+       src/main.o \
+       src/harmony.o \
+       src/utils.o
 
-# Output files
-ELF = $(TARGET).elf
-BIN = $(TARGET).bin
+INCLUDES = -Iinc
 
-.PHONY: all clean flash
+all: $(TARGET).bin
 
-all: $(ELF) $(BIN)
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(ELF): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
+$(TARGET).elf: $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-%.bin: %.elf
+$(TARGET).bin: $(TARGET).elf
 	$(OBJCOPY) -O binary $< $@
 	$(SIZE) $<
 
 clean:
-	rm -f $(OBJS) $(ELF) $(BIN)
-
-flash: $(BIN)
-	st-flash write $(BIN) 0x8000000
+	rm -f $(OBJS) $(TARGET).elf $(TARGET).bin
